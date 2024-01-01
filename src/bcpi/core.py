@@ -6,7 +6,8 @@ from ezmsg.panel.application import Application, ApplicationSettings
 from ezmsg.unicorn.dashboard import UnicornDashboardApp
 from ezmsg.tasks.task import TaskSettings
 from ezmsg.tasks.directory import TaskDirectory
-from ezmsg.gadget.hiddevice import HIDDevice, HIDDeviceSettings
+from ezmsg.gadget.hiddevice import hid_devices
+from ezmsg.gadget.config import GadgetConfig
 
 from ezmsg.sigproc.butterworthfilter import ButterworthFilterSettings
 from ezmsg.sigproc.decimate import DownsampleSettings
@@ -54,6 +55,11 @@ def core_system(data_dir: Path, port: int) -> None:
         )
     )
 
+    gadget_config = GadgetConfig()
+    hid_units = hid_devices(gadget_config)
+
+    ez.logger.info(f'Accessable HID Devices: {hid_units}')
+
     app = Application(
         ApplicationSettings(
             port = port
@@ -70,6 +76,7 @@ def core_system(data_dir: Path, port: int) -> None:
         PREPROC = preproc,
         TASKS = tasks,
         APP = app,
+        **hid_units
     )
 
     connections = [
