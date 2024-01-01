@@ -6,11 +6,13 @@ from ezmsg.panel.application import Application, ApplicationSettings
 from ezmsg.unicorn.dashboard import UnicornDashboardApp
 from ezmsg.tasks.task import TaskSettings
 from ezmsg.tasks.directory import TaskDirectory
+from ezmsg.tasks.frequencymapper import FrequencyMapper, FrequencyMapperSettings
 from ezmsg.gadget.hiddevice import hid_devices
 from ezmsg.gadget.config import GadgetConfig
 
 from ezmsg.sigproc.butterworthfilter import ButterworthFilterSettings
 from ezmsg.sigproc.decimate import DownsampleSettings
+from ezmsg.sigproc.signalinjector import SignalInjector, SignalInjectorSettings
 from .temporalpreproc import TemporalPreproc, TemporalPreprocSettings
 
 EPHYS_TOPIC = 'EPHYS' # AxisArray -- Electrophysiology
@@ -31,6 +33,21 @@ except ImportError:
 def core_system(data_dir: Path, port: int) -> None:
 
     unicorn = UnicornDashboardApp()
+
+    injector = SignalInjector(
+        SignalInjectorSettings(
+            time_dim = 'time',
+            mixing_seed = 0xDEADBEEF
+        )
+    )
+
+    freq_map = FrequencyMapper(
+        FrequencyMapperSettings(
+            mapping = {
+                #'GO': 15.0 # Hz
+            }
+        )
+    )
 
     tasks = TaskDirectory(
         TaskSettings(
@@ -73,6 +90,8 @@ def core_system(data_dir: Path, port: int) -> None:
 
     components = dict(
         UNICORN = unicorn,
+        INJECTOR = injector,
+        FREQ_MAP = freq_map,
         PREPROC = preproc,
         TASKS = tasks,
         APP = app,
@@ -82,12 +101,15 @@ def core_system(data_dir: Path, port: int) -> None:
     connections = [
         (unicorn.OUTPUT_ACCELEROMETER, ACCELEROMETER_TOPIC),
         (unicorn.OUTPUT_GYROSCOPE, GYROSCOPE_TOPIC),
-        (unicorn.OUTPUT_SIGNAL, EPHYS_TOPIC),
+        (unicorn.OUTPUT_SIGNAL, injector.INPUT_SIGNAL),
+        (injector.OUTPUT_SIGNAL, EPHYS_TOPIC),
         (EPHYS_TOPIC, preproc.INPUT_SIGNAL),
         (preproc.OUTPUT_SIGNAL, EPHYS_PREPROC_TOPIC),
         (EPHYS_PREPROC_TOPIC, tasks.INPUT_SIGNAL),
         (tasks.OUTPUT_SAMPLE, TRIAL_TOPIC),
         (tasks.OUTPUT_TARGET_CLASS, TARGET_TOPIC),
+        (TARGET_TOPIC, freq_map.INPUT_CLASS),
+        (freq_map.OUTPUT_FREQUENCY, injector.INPUT_FREQUENCY),
     ]
 
     if FBCSP:
