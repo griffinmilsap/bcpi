@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "bcpi"
+version = "0.2.0"
+description = "BCI HID development platform via Raspberry Pi c/o ezmsg"
+authors = ["Griffin Milsap <griffin.milsap@jhuapl.edu>"]
+readme = "README.md"
+homepage = "https://github.com/griffinmilsap/bcpi"
+packages = [
+  { include = "bcpi", from = "src" }
+]
+
+[tool.poetry.scripts]
+bcpi = "bcpi.command:cmdline"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+panel = "^1.2.3"
+ezmsg = "^3.3.3"
+ezmsg-sigproc = "^1.2.3"
+ezmsg-gadget = { git = "https://github.com/griffinmilsap/ezmsg-gadget.git", rev = "main" }
+ezmsg-tasks = { git = "https://github.com/griffinmilsap/ezmsg-tasks.git", rev = "main" }
+ezmsg-unicorn = { git = "https://github.com/griffinmilsap/ezmsg-unicorn.git", rev = "main" }
+ezmsg-fbcsp = { git = "https://github.com/iscoe/ezmsg-fbcsp.git", rev = "main", optional = true }
+
+[tool.poetry.extras]
+fbcsp = [ "ezmsg-fbcsp" ]
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.0.0"
+pytest-asyncio = "*"
+pytest-cov = "*"
+numpy = "^1.24.2"
+flake8 = "*"
+
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
+pythonpath = ["src", "tests"]
+testpaths = "tests"
+
+[build-system] 
+requires = ["poetry-core"] 
+build-backend = "poetry.core.masonry.api"
