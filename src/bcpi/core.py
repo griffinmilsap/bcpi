@@ -5,7 +5,7 @@ import ezmsg.core as ez
 from ezmsg.panel.application import Application, ApplicationSettings
 from ezmsg.unicorn.dashboard import UnicornDashboardApp
 from ezmsg.tasks.task import TaskSettings
-from ezmsg.tasks.directory import TaskDirectory
+from ezmsg.tasks.cuedactiontask import CuedActionTaskApp
 from ezmsg.tasks.frequencymapper import FrequencyMapper, FrequencyMapperSettings
 from ezmsg.gadget.hiddevice import hid_devices
 from ezmsg.gadget.config import GadgetConfig
@@ -30,6 +30,7 @@ try:
 except ImportError:
     FBCSP = False
 
+
 def core_system(data_dir: Path, port: int) -> None:
 
     unicorn = UnicornDashboardApp()
@@ -49,7 +50,7 @@ def core_system(data_dir: Path, port: int) -> None:
         )
     )
 
-    tasks = TaskDirectory(
+    cat = CuedActionTaskApp(
         TaskSettings(
             data_dir = data_dir,
             buffer_dur = 10.0
@@ -85,7 +86,7 @@ def core_system(data_dir: Path, port: int) -> None:
 
     app.panels = {
         'device': unicorn.app,
-        'tasks': tasks.app,
+        'cued_action_task': cat.app,
     }
 
     components = dict(
@@ -93,7 +94,7 @@ def core_system(data_dir: Path, port: int) -> None:
         INJECTOR = injector,
         FREQ_MAP = freq_map,
         PREPROC = preproc,
-        TASKS = tasks,
+        CAT = cat,
         APP = app,
         **hid_units
     )
@@ -105,9 +106,9 @@ def core_system(data_dir: Path, port: int) -> None:
         (injector.OUTPUT_SIGNAL, EPHYS_TOPIC),
         (EPHYS_TOPIC, preproc.INPUT_SIGNAL),
         (preproc.OUTPUT_SIGNAL, EPHYS_PREPROC_TOPIC),
-        (EPHYS_PREPROC_TOPIC, tasks.INPUT_SIGNAL),
-        (tasks.OUTPUT_SAMPLE, TRIAL_TOPIC),
-        (tasks.OUTPUT_TARGET_CLASS, TARGET_TOPIC),
+        (EPHYS_PREPROC_TOPIC, cat.INPUT_SIGNAL),
+        (cat.OUTPUT_SAMPLE, TRIAL_TOPIC),
+        (cat.OUTPUT_TARGET_CLASS, TARGET_TOPIC),
         (TARGET_TOPIC, freq_map.INPUT_CLASS),
         (freq_map.OUTPUT_FREQUENCY, injector.INPUT_FREQUENCY),
     ]
