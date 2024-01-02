@@ -61,13 +61,13 @@ def core_system(data_dir: Path, port: int) -> None:
         TemporalPreprocSettings(
             filt_settings = ButterworthFilterSettings(
                 axis = 'time',
-                order = 0, # Butterworth filter order
-                cuton = None, # Cuton (Hz)
-                cutoff = None, # Cutoff (Hz)
+                order = 3, # Butterworth filter order
+                cuton = 5, # Cuton (Hz)
+                cutoff = 50, # Cutoff (Hz)
             ),
             decimate_settings = DownsampleSettings(
                 axis = 'time',
-                factor = 1
+                factor = 2
             ),
             ewm_history_dur = 2.0
         )
