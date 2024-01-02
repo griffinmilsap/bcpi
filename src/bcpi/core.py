@@ -130,5 +130,12 @@ def core_system(data_dir: Path, port: int) -> None:
 
     ez.run(
         components = components,
-        connections = connections
+        connections = connections,
+        # We're pretty memory constrained on some Pi platforms,
+        # multiprocessing may really help us, but the memory hit is
+        # substantial.  
+        # `import torch` uses ~100MB of memory per-process
+        # `import panel` uses ~61MB of memory per-process
+        # The pizero2w only has 512 MB of system memory..
+        force_single_process = True 
     )
