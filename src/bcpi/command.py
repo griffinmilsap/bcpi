@@ -1,8 +1,10 @@
 import argparse
+import typing
 
 from pathlib import Path
 
 from .core import core_system
+from .config import CONFIG_PATH, CONFIG_ENV
 
 def cmdline() -> None:
 
@@ -11,23 +13,15 @@ def cmdline() -> None:
     )
 
     parser.add_argument( 
-        '--data-dir',
+        '--config',
         type = lambda x: Path( x ),
-        help = "Directory to store samples and models",
-        default = Path.home() / 'bcpi-data'
-    )
-
-    parser.add_argument(
-        '--port',
-        type = int,
-        help = 'Port to run Panel dashboard server on (default: pick a random open port)',
-        default = 0
+        help = f'config path for bcpi (default = {CONFIG_PATH}, or set {CONFIG_ENV})',
+        default = None
     )
 
     class Args:
-        data_dir: Path
-        port: int
+        config: typing.Optional[Path]
 
     args = parser.parse_args(namespace=Args)
 
-    core_system(data_dir = args.data_dir, port = args.port)
+    core_system(args.config)

@@ -4,6 +4,7 @@ from pathlib import Path
 import ezmsg.core as ez
 from ezmsg.panel.application import Application, ApplicationSettings
 from ezmsg.unicorn.dashboard import UnicornDashboardApp
+from ezmsg.unicorn.device import UnicornDeviceSettings
 from ezmsg.tasks.task import TaskSettings
 from ezmsg.tasks.cuedactiontask import CuedActionTaskApp
 from ezmsg.tasks.frequencymapper import FrequencyMapper, FrequencyMapperSettings
@@ -14,6 +15,7 @@ from ezmsg.sigproc.butterworthfilter import ButterworthFilterSettings
 from ezmsg.sigproc.decimate import DownsampleSettings
 from ezmsg.sigproc.signalinjector import SignalInjector, SignalInjectorSettings
 from .temporalpreproc import TemporalPreproc, TemporalPreprocSettings
+from .config import ConfigParser
 
 EPHYS_TOPIC = 'EPHYS' # AxisArray -- Electrophysiology
 EPHYS_PREPROC_TOPIC = 'EPHYS_PREPROC' # AxisArray -- Preprocessed Electrophysiology
@@ -31,9 +33,13 @@ except ImportError:
     FBCSP = False
 
 
-def core_system(data_dir: Path, port: int) -> None:
+def core_system(config_path: typing.Optional[Path] = None) -> None:
 
-    unicorn = UnicornDashboardApp()
+    config = ConfigParser(config_path)
+
+    unicorn = UnicornDashboardApp(
+        device_settings = config.unicorn_settings
+    )
 
     injector = SignalInjector(
         SignalInjectorSettings(
@@ -52,7 +58,7 @@ def core_system(data_dir: Path, port: int) -> None:
 
     cat = CuedActionTaskApp(
         TaskSettings(
-            data_dir = data_dir,
+            data_dir = config.data_dir,
             buffer_dur = 10.0
         )
     )
@@ -80,7 +86,7 @@ def core_system(data_dir: Path, port: int) -> None:
 
     app = Application(
         ApplicationSettings(
-            port = port
+            port = config.port
         )
     )
 
@@ -116,7 +122,7 @@ def core_system(data_dir: Path, port: int) -> None:
     if FBCSP:
         decoding = Dashboard( 
             DashboardSettings(
-                data_dir = data_dir,
+                data_dir = config.data_dir,
             ) 
         )
 
@@ -137,5 +143,6 @@ def core_system(data_dir: Path, port: int) -> None:
         # `import torch` uses ~100MB of memory per-process
         # `import panel` uses ~61MB of memory per-process
         # The pizero2w only has 512 MB of system memory..
-        force_single_process = True 
+        force_single_process = True,
+        graph_address = config.graph_address,
     )
