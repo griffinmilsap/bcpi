@@ -33,7 +33,7 @@ class BCPIConfig:
 
     @property
     def unicorn_settings(self) -> UnicornDeviceSettings:
-        address = self.parser.get('unicorn', 'address', fallback = None)
+        address = self.parser.get('unicorn', 'address', fallback = 'simulator')
         n_samp = int(self.parser.get('unicorn', 'n_samp', fallback = 50))
         return UnicornDeviceSettings(
             address = address,
