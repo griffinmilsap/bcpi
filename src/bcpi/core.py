@@ -15,7 +15,7 @@ from ezmsg.sigproc.butterworthfilter import ButterworthFilterSettings
 from ezmsg.sigproc.decimate import DownsampleSettings
 from ezmsg.sigproc.signalinjector import SignalInjector, SignalInjectorSettings
 from .temporalpreproc import TemporalPreproc, TemporalPreprocSettings
-from .config import ConfigParser
+from .config import BCPIConfig
 
 EPHYS_TOPIC = 'EPHYS' # AxisArray -- Electrophysiology
 EPHYS_PREPROC_TOPIC = 'EPHYS_PREPROC' # AxisArray -- Preprocessed Electrophysiology
@@ -35,7 +35,7 @@ except ImportError:
 
 def core_system(config_path: typing.Optional[Path] = None) -> None:
 
-    config = ConfigParser(config_path)
+    config = BCPIConfig(config_path)
 
     unicorn = UnicornDashboardApp(
         device_settings = config.unicorn_settings
