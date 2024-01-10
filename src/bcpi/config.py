@@ -34,10 +34,10 @@ class BCPIConfig:
     @property
     def unicorn_settings(self) -> UnicornDeviceSettings:
         address = self.parser.get('unicorn', 'address', fallback = None)
-        blocksize = self.parser.get('unicorn', 'n_samp', fallback = 50)
+        n_samp = int(self.parser.get('unicorn', 'n_samp', fallback = 50))
         return UnicornDeviceSettings(
             address = address,
-            n_samp = blocksize
+            n_samp = n_samp
         )
     
     @property
