@@ -3,8 +3,7 @@ from pathlib import Path
 
 import ezmsg.core as ez
 from ezmsg.panel.application import Application, ApplicationSettings
-from ezmsg.unicorn.dashboard import UnicornDashboardApp
-from ezmsg.unicorn.device import UnicornDeviceSettings
+from ezmsg.unicorn.dashboard import UnicornDashboardApp, UnicornDashboardSettings
 from ezmsg.tasks.task import TaskSettings
 from ezmsg.tasks.cuedactiontask import CuedActionTaskApp
 from ezmsg.tasks.frequencymapper import FrequencyMapper, FrequencyMapperSettings
@@ -38,7 +37,9 @@ def core_system(config_path: typing.Optional[Path] = None) -> None:
     config = BCPIConfig(config_path)
 
     unicorn = UnicornDashboardApp(
-        device_settings = config.unicorn_settings
+        UnicornDashboardSettings(
+            device_settings = config.unicorn_settings
+        )
     )
 
     injector = SignalInjector(
