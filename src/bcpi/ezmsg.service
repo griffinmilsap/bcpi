@@ -1,0 +1,14 @@
+[Unit]
+Description=GraphServer for ezmsg
+After=network.target
+
+[Service]
+Type=oneshot
+User=bcpi
+ExecStart=ezmsg start
+RemainAfterExit=true
+ExecStop=ezmsg shutdown
+StandardOutput=journal
+
+[Install]
+WantedBy=local-fs.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=BCI development environment for Raspberry Pi
+After=syslog.target
+Requires=ezmsg-gadget.service
+Requires=ezmsg.service
+
+[Service]
+Type=simple
+User=bcpi
+ExecStart=/home/bcpi/bcpi --port=8888
+StandardOutput=journal
+
+[Install]
+WantedBy=local-fs.target
