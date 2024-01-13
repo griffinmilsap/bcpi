@@ -2,6 +2,7 @@ import os
 import sys
 import typing
 import asyncio
+import logging
 
 from pathlib import Path
 
@@ -12,10 +13,10 @@ from param.parameterized import Event
 
 from ezmsg.panel.tabbedapp import Tab, TabbedApp
 
-class StrategyManagerSettings(ez.Settings):
+class SystemSettings(ez.Settings):
     data_dir: Path
 
-class StrategyManagerState(ez.State):
+class SystemState(ez.State):
     shell: pn.widgets.Terminal
 
     main_tab: pn.viewable.Viewable
@@ -25,14 +26,19 @@ class StrategyManagerState(ez.State):
     stop_main: pn.widgets.Button
     main_running: pn.indicators.LoadingSpinner
 
+    log_term: pn.widgets.Terminal
+
+    shutdown_button: pn.widgets.Button
+    reboot_button: pn.widgets.Button
+
     sidebar: pn.viewable.Viewable
     content: pn.viewable.Viewable
 
     task: typing.Optional[asyncio.Task] = None
 
-class StrategyManager(ez.Unit, Tab):
-    SETTINGS: StrategyManagerSettings
-    STATE: StrategyManagerState
+class System(ez.Unit, Tab):
+    SETTINGS: SystemSettings
+    STATE: SystemState
 
     @property
     def tab_name(self) -> str:
@@ -67,8 +73,8 @@ class StrategyManager(ez.Unit, Tab):
         self.STATE.main_running = pn.indicators.LoadingSpinner(
             value = False,
             color = 'primary',
-            width = 40,
-            height = 40,
+            width = 35,
+            height = 35,
         )
 
         self.STATE.start_main = pn.widgets.Button(
@@ -76,25 +82,25 @@ class StrategyManager(ez.Unit, Tab):
             button_type = 'success',
         )
 
-        def on_start(_: Event) -> None:
+        def start_main(_: typing.Optional[Event] = None) -> None:
             if entrypoint.exists():
                 self.STATE.main_term.clear() # type: ignore
                 self.STATE.main_term.subprocess.run(sys.executable, str(entrypoint))
             else:
-                # Raise modal
-                ...
+                errmsg = f'ERROR: Entrypoint does not exist: {str(entrypoint)}'
+                self.STATE.main_term.subprocess.run('echo', errmsg)
 
-        self.STATE.start_main.on_click(on_start)
+        self.STATE.start_main.on_click(start_main)
 
         self.STATE.stop_main = pn.widgets.Button(
             name = 'Kill Main Strategy',
             button_type = 'danger',
         )
 
-        def on_stop(_: Event) -> None:
+        def stop_main(_: typing.Optional[Event] = None) -> None:
             self.STATE.main_term.subprocess.kill() # type: ignore
 
-        self.STATE.stop_main.on_click(on_stop)
+        self.STATE.stop_main.on_click(stop_main)
 
         self.STATE.main_file = pn.widgets.StaticText(
             name = 'Main Entrypoint',
@@ -113,10 +119,7 @@ class StrategyManager(ez.Unit, Tab):
 
         self.STATE.main_term.subprocess.param.watch(main_running, 'running', onlychanged = True)
 
-        if entrypoint.exists():
-            on_start(None)
-        else:
-            self.STATE.main_term.subprocess.run('ls', '-lah', str(entrypoint.parent))
+        start_main()
 
         self.STATE.main_tab = pn.Column(
             self.STATE.main_file,
@@ -129,14 +132,58 @@ class StrategyManager(ez.Unit, Tab):
             name = 'Main Strategy'
         )
 
+        self.STATE.log_term = pn.widgets.Terminal(
+            sizing_mode = 'stretch_both',
+            name = 'Log'
+        )
+
+        stream_handler = logging.StreamHandler(self.STATE.log_term)
+        stream_handler.terminator = "  \n"
+        formatter = logging.Formatter(
+            "%(asctime)s.%(msecs)03d - pid: %(process)d - %(threadName)s "
+            + "- %(levelname)s - %(funcName)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        stream_handler.setFormatter(formatter)
+        ez.logger.addHandler(stream_handler)
+
         self.STATE.content = pn.Tabs(
-            self.STATE.shell,
+            self.STATE.log_term,
             self.STATE.main_tab,
+            self.STATE.shell,
             sizing_mode = 'stretch_both',
         )
 
+        self.STATE.shutdown_button = pn.widgets.Button(
+            name = 'Shutdown',
+            button_type = 'danger',
+            sizing_mode = 'stretch_width'
+        )
+
+        def shutdown_system(_: Event) -> None:
+            ez.logger.warning('Shutting down system...')
+            stop_main()
+            self.STATE.main_term.subprocess.run('sudo', 'systemctl', 'poweroff')
+
+        self.STATE.shutdown_button.on_click(shutdown_system)
+
+        self.STATE.reboot_button = pn.widgets.Button(
+            name = 'Reboot',
+            button_type = 'warning',
+            sizing_mode = 'stretch_width'
+        )
+
+        def reboot_system(_: Event) -> None:
+            ez.logger.warning('Rebooting system...')
+            stop_main()
+            self.STATE.main_term.subprocess.run('sudo', 'systemctl', 'reboot')
+
+        self.STATE.reboot_button.on_click(reboot_system)
+
         self.STATE.sidebar = pn.Card(
-            title = 'File Upload',
+            self.STATE.reboot_button,
+            self.STATE.shutdown_button,
+            title = 'Power Controls',
             sizing_mode = 'stretch_width',
         )
 
@@ -147,22 +194,22 @@ class StrategyManager(ez.Unit, Tab):
         return self.STATE.content
 
 
-class StrategyManagerApp(ez.Collection, TabbedApp):
-    SETTINGS: StrategyManagerSettings
+class SystemApp(ez.Collection, TabbedApp):
+    SETTINGS: SystemSettings
 
-    STRATEGY = StrategyManager()
+    SYSTEM = System()
 
     def configure(self) -> None:
-        self.STRATEGY.apply_settings(self.SETTINGS)
+        self.SYSTEM.apply_settings(self.SETTINGS)
 
     @property
     def title(self) -> str:
-        return 'Strategy Manager'
+        return 'System Manager'
     
     @property
     def tabs(self) -> typing.List[Tab]:
         return [
-            self.STRATEGY,
+            self.SYSTEM,
         ]
 
 
@@ -171,8 +218,8 @@ if __name__ == '__main__':
     from ezmsg.panel.application import Application, ApplicationSettings
     from ezmsg.util.debuglog import DebugLog
 
-    strat_app = StrategyManagerApp(
-        StrategyManagerSettings(
+    sys_app = SystemApp(
+        SystemSettings(
             data_dir = Path('~/bcpi-data').expanduser()
         )
     )
@@ -186,12 +233,12 @@ if __name__ == '__main__':
     log = DebugLog()
 
     app.panels = {
-        'strategy': strat_app.app
+        'system': sys_app.app
     }
 
     ez.run(
         APP = app,
-        STRATEGY = strat_app,
+        SYSTEM = sys_app,
         LOG = log,
     )
 

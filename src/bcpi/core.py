@@ -15,6 +15,7 @@ from ezmsg.sigproc.decimate import DownsampleSettings
 from ezmsg.sigproc.signalinjector import SignalInjector, SignalInjectorSettings
 from .temporalpreproc import TemporalPreproc, TemporalPreprocSettings
 from .config import BCPIConfig
+from .system import SystemApp, SystemSettings
 
 EPHYS_TOPIC = 'EPHYS' # AxisArray -- Electrophysiology
 EPHYS_PREPROC_TOPIC = 'EPHYS_PREPROC' # AxisArray -- Preprocessed Electrophysiology
@@ -35,6 +36,12 @@ except ImportError:
 def core_system(config_path: typing.Optional[Path] = None) -> None:
 
     config = BCPIConfig(config_path)
+
+    system = SystemApp(
+        SystemSettings(
+            data_dir = config.data_dir,
+        )
+    )
 
     unicorn = UnicornDashboardApp(
         UnicornDashboardSettings(
@@ -92,11 +99,13 @@ def core_system(config_path: typing.Optional[Path] = None) -> None:
     )
 
     app.panels = {
+        'system': system.app,
         'device': unicorn.app,
         'cued_action_task': cat.app,
     }
 
     components = dict(
+        SYSTEM = system,
         UNICORN = unicorn,
         INJECTOR = injector,
         FREQ_MAP = freq_map,
