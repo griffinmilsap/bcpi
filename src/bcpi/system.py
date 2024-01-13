@@ -148,9 +148,9 @@ class System(ez.Unit, Tab):
         ez.logger.addHandler(stream_handler)
 
         self.STATE.content = pn.Tabs(
-            self.STATE.log_term,
+            # self.STATE.log_term,
             self.STATE.main_tab,
-            self.STATE.shell,
+            # self.STATE.shell,
             sizing_mode = 'stretch_both',
         )
 
