@@ -149,7 +149,7 @@ class System(ez.Unit, Tab):
 
         self.STATE.content = pn.Tabs(
             # self.STATE.log_term,
-            self.STATE.main_tab,
+            # self.STATE.main_tab,
             # self.STATE.shell,
             sizing_mode = 'stretch_both',
         )
