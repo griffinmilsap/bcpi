@@ -150,9 +150,9 @@ class SystemTab(ez.Unit, Tab):
         ez.logger.addHandler(stream_handler)
 
         self.STATE.content = pn.Tabs(
-            self.STATE.log_term,
-            self.STATE.main_tab,
-            self.STATE.shell,
+            # self.STATE.log_term,
+            # self.STATE.main_tab,
+            # self.STATE.shell,
             min_height = 600,
             sizing_mode = 'stretch_both',
         )
