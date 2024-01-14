@@ -15,8 +15,8 @@ from ezmsg.sigproc.butterworthfilter import ButterworthFilterSettings
 from ezmsg.sigproc.decimate import DownsampleSettings
 from ezmsg.sigproc.signalinjector import SignalInjector, SignalInjectorSettings
 
-from ezmsg.fbcsp.inference import Inference, InferenceSettings
-from ezmsg.fbcsp.dashboard.inferencetab import InferenceTab, InferenceTabSettings
+# from ezmsg.fbcsp.inference import Inference, InferenceSettings
+# from ezmsg.fbcsp.dashboard.inferencetab import InferenceTab, InferenceTabSettings
 
 from .temporalpreproc import TemporalPreproc, TemporalPreprocSettings
 from .config import BCPIConfig
@@ -46,8 +46,8 @@ class BCPISystem(ez.Collection, TabbedApp):
     CAT_TAB = CuedActionTask()
     PREPROC = TemporalPreproc()
 
-    INFERENCE_TAB = InferenceTab()
-    INFERENCE = Inference()
+    # INFERENCE_TAB = InferenceTab()
+    # INFERENCE = Inference()
 
     @property
     def title(self) -> str:
@@ -56,7 +56,7 @@ class BCPISystem(ez.Collection, TabbedApp):
     @property
     def tabs(self) -> typing.List[Tab]:
         return [
-            self.INFERENCE_TAB,
+            # self.INFERENCE_TAB,
             self.UNICORN_TAB,
             self.CAT_TAB,
             self.SYSTEM_TAB,
@@ -115,17 +115,17 @@ class BCPISystem(ez.Collection, TabbedApp):
             )
         )
 
-        self.INFERENCE.apply_settings(
-            InferenceSettings(
-                # model if it exists
-            )
-        )
+        # self.INFERENCE.apply_settings(
+        #     InferenceSettings(
+        #         # model if it exists
+        #     )
+        # )
 
-        self.INFERENCE_TAB.apply_settings(
-            InferenceTabSettings(
-                data_dir = config.data_dir
-            )
-        )
+        # self.INFERENCE_TAB.apply_settings(
+        #     InferenceTabSettings(
+        #         data_dir = config.data_dir
+        #     )
+        # )
 
     def network(self) -> ez.NetworkDefinition:
         return (
@@ -140,10 +140,10 @@ class BCPISystem(ez.Collection, TabbedApp):
             (self.CAT_TAB.OUTPUT_TARGET_CLASS, TARGET_TOPIC),
             (TARGET_TOPIC, self.MAPPER.INPUT_CLASS),
             (self.MAPPER.OUTPUT_FREQUENCY, self.INJECTOR.INPUT_FREQUENCY),
-            (EPHYS_PREPROC_TOPIC, self.INFERENCE.INPUT_SIGNAL),
-            (self.INFERENCE_TAB.OUTPUT_SETTINGS, self.INFERENCE.INPUT_SETTINGS),
-            (self.INFERENCE.OUTPUT_DECODE, DECODE_TOPIC),
-            (self.INFERENCE.OUTPUT_CLASS, CLASS_TOPIC),
+            # (EPHYS_PREPROC_TOPIC, self.INFERENCE.INPUT_SIGNAL),
+            # (self.INFERENCE_TAB.OUTPUT_SETTINGS, self.INFERENCE.INPUT_SETTINGS),
+            # (self.INFERENCE.OUTPUT_DECODE, DECODE_TOPIC),
+            # (self.INFERENCE.OUTPUT_CLASS, CLASS_TOPIC),
         )
 
 
