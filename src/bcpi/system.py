@@ -9,14 +9,16 @@ from pathlib import Path
 import ezmsg.core as ez
 import panel as pn
 
+pn.extension('terminal')
+
 from param.parameterized import Event
 
 from ezmsg.panel.tabbedapp import Tab, TabbedApp
 
-class SystemSettings(ez.Settings):
+class SystemTabSettings(ez.Settings):
     data_dir: Path
 
-class SystemState(ez.State):
+class SystemTabState(ez.State):
     shell: pn.widgets.Terminal
 
     main_tab: pn.viewable.Viewable
@@ -36,13 +38,13 @@ class SystemState(ez.State):
 
     task: typing.Optional[asyncio.Task] = None
 
-class System(ez.Unit, Tab):
-    SETTINGS: SystemSettings
-    STATE: SystemState
+class SystemTab(ez.Unit, Tab):
+    SETTINGS: SystemTabSettings
+    STATE: SystemTabState
 
     @property
     def tab_name(self) -> str:
-        return 'Strategy Manager'
+        return 'System'
 
     async def initialize(self) -> None:
 
@@ -148,9 +150,10 @@ class System(ez.Unit, Tab):
         ez.logger.addHandler(stream_handler)
 
         self.STATE.content = pn.Tabs(
-            # self.STATE.log_term,
-            # self.STATE.main_tab,
-            # self.STATE.shell,
+            self.STATE.log_term,
+            self.STATE.main_tab,
+            self.STATE.shell,
+            min_height = 600,
             sizing_mode = 'stretch_both',
         )
 
@@ -195,9 +198,9 @@ class System(ez.Unit, Tab):
 
 
 class SystemApp(ez.Collection, TabbedApp):
-    SETTINGS: SystemSettings
+    SETTINGS: SystemTabSettings
 
-    SYSTEM = System()
+    SYSTEM = SystemTab()
 
     def configure(self) -> None:
         self.SYSTEM.apply_settings(self.SETTINGS)
@@ -219,7 +222,7 @@ if __name__ == '__main__':
     from ezmsg.util.debuglog import DebugLog
 
     sys_app = SystemApp(
-        SystemSettings(
+        SystemTabSettings(
             data_dir = Path('~/bcpi-data').expanduser()
         )
     )

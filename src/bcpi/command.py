@@ -3,7 +3,7 @@ import typing
 
 from pathlib import Path
 
-from .core import core_system
+from .app import core_system
 from .config import CONFIG_PATH, CONFIG_ENV
 
 def cmdline() -> None:
