@@ -229,7 +229,7 @@ if __name__ == '__main__':
 
     app = Application(
         ApplicationSettings(
-            port = 0
+            port = 8888
         )
     )
 
