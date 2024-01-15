@@ -117,7 +117,7 @@ class BCPISystem(ez.Collection, TabbedApp):
 
         self.INFERENCE.apply_settings(
             InferenceSettings(
-                # model if it exists
+                model_path = config.data_dir / 'models' / 'boot.model'
             )
         )
 
