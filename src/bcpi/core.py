@@ -3,9 +3,7 @@ from pathlib import Path
 
 import ezmsg.core as ez
 
-from ezmsg.unicorn.device import UnicornDevice, UnicornDeviceSettings
-from ezmsg.gadget.hiddevice import hid_devices
-from ezmsg.gadget.config import GadgetConfig
+from ezmsg.unicorn.dashboard import UnicornDashboard, UnicornDashboardSettings
 
 from ezmsg.sigproc.butterworthfilter import ButterworthFilterSettings
 from ezmsg.sigproc.decimate import DownsampleSettings
@@ -19,14 +17,15 @@ from .config import BCPIConfig
 from .system import SystemTab, SystemTabSettings
 
 
-EPHYS_TOPIC = 'EPHYS' # AxisArray -- Electrophysiology
-EPHYS_PREPROC_TOPIC = 'EPHYS_PREPROC' # AxisArray -- Preprocessed Electrophysiology
-ACCELEROMETER_TOPIC = 'ACCEL' # AxisArray -- Accelerometer timeseries from device
-GYROSCOPE_TOPIC = 'GYRO' # AxisArray -- Gyroscope timeseries from device
-DECODE_TOPIC = 'DECODE' # ClassDecodeMessage -- Posterior Decoder Probabilities
-CLASS_TOPIC = 'CLASS' # typing.Optional[str] -- Decoded class
-TARGET_TOPIC = 'TARGET' # typing.Optional[str] -- Target class (from Task)
-TRIAL_TOPIC = 'TRIAL' # SampleMessage -- Clipped trial data (Preprocessed)
+class BCPITopics:
+    EPHYS = 'EPHYS' # AxisArray -- Electrophysiology
+    EPHYS_PREPROC = 'EPHYS_PREPROC' # AxisArray -- Preprocessed Electrophysiology
+    ACCELEROMETER = 'ACCEL' # AxisArray -- Accelerometer timeseries from device
+    GYROSCOPE = 'GYRO' # AxisArray -- Gyroscope timeseries from device
+    DECODE = 'DECODE' # ClassDecodeMessage -- Posterior Decoder Probabilities
+    CLASS = 'CLASS' # typing.Optional[str] -- Decoded class
+    TARGET = 'TARGET' # typing.Optional[str] -- Target class (from Task)
+    TRIAL = 'TRIAL' # SampleMessage -- Clipped trial data (Preprocessed)
 
 
 class BCPICoreSettings(ez.Settings):
@@ -35,8 +34,10 @@ class BCPICoreSettings(ez.Settings):
 class BCPICore(ez.Collection):
     SETTINGS: BCPICoreSettings
 
+    INPUT_INFERENCE_SETTINGS = ez.InputStream(InferenceSettings)
+
     SYSTEM_TAB = SystemTab()
-    UNICORN = UnicornDevice()
+    UNICORN = UnicornDashboard()
     MAPPER = FrequencyMapper()
     INJECTOR = SignalInjector()
     PREPROC = TemporalPreproc()
@@ -53,7 +54,9 @@ class BCPICore(ez.Collection):
         )
 
         self.UNICORN.apply_settings(
-                config.unicorn_settings
+            UnicornDashboardSettings(
+                device_settings = config.unicorn_settings
+            )
         )
 
         self.INJECTOR.apply_settings(
@@ -73,7 +76,6 @@ class BCPICore(ez.Collection):
                 }
             )
         )
-
 
         self.PREPROC.apply_settings(
             TemporalPreprocSettings(
@@ -99,50 +101,18 @@ class BCPICore(ez.Collection):
 
     def network(self) -> ez.NetworkDefinition:
         return (
-            (self.UNICORN.OUTPUT_ACCELEROMETER, ACCELEROMETER_TOPIC),
-            (self.UNICORN.OUTPUT_GYROSCOPE, GYROSCOPE_TOPIC),
+            (self.UNICORN.OUTPUT_ACCELEROMETER, BCPITopics.ACCELEROMETER),
+            (self.UNICORN.OUTPUT_GYROSCOPE, BCPITopics.GYROSCOPE),
             (self.UNICORN.OUTPUT_SIGNAL, self.INJECTOR.INPUT_SIGNAL),
-            (self.INJECTOR.OUTPUT_SIGNAL, EPHYS_TOPIC),
-            (EPHYS_TOPIC, self.PREPROC.INPUT_SIGNAL),
-            (self.PREPROC.OUTPUT_SIGNAL, EPHYS_PREPROC_TOPIC),
+            (self.INJECTOR.OUTPUT_SIGNAL, BCPITopics.EPHYS),
+            (self.INJECTOR.OUTPUT_SIGNAL, self.PREPROC.INPUT_SIGNAL),
+            (self.PREPROC.OUTPUT_SIGNAL, BCPITopics.EPHYS_PREPROC),
 
-            (TARGET_TOPIC, self.MAPPER.INPUT_CLASS),
+            (BCPITopics.TARGET, self.MAPPER.INPUT_CLASS),
             (self.MAPPER.OUTPUT_FREQUENCY, self.INJECTOR.INPUT_FREQUENCY),
-            (EPHYS_PREPROC_TOPIC, self.INFERENCE.INPUT_SIGNAL),
-
-            (self.INFERENCE.OUTPUT_DECODE, DECODE_TOPIC),
-            (self.INFERENCE.OUTPUT_CLASS, CLASS_TOPIC)
+            (self.PREPROC.OUTPUT_SIGNAL, self.INFERENCE.INPUT_SIGNAL),
+            
+            (self.INPUT_INFERENCE_SETTINGS, self.INFERENCE.INPUT_SETTINGS),
+            (self.INFERENCE.OUTPUT_DECODE, BCPITopics.DECODE),
+            (self.INFERENCE.OUTPUT_CLASS, BCPITopics.CLASS),
         )
-
-
-def core_system(config_path: typing.Optional[Path] = None) -> None:
-
-    config = BCPIConfig(config_path = config_path)
-
-    system = BCPICore(
-        BCPICoreSettings(
-            config_path = config_path
-        )
-    )
-
-    gadget_config = GadgetConfig()
-    hid_units = hid_devices(gadget_config)
-
-    ez.logger.info(f'Accessable HID Devices: {hid_units}')
-
-    components = dict(
-        SYSTEM = system,
-        **hid_units
-    )
-
-    ez.run(
-        components = components,
-        # We're pretty memory constrained on some Pi platforms,
-        # multiprocessing may really help us, but the memory hit is
-        # substantial.  
-        # `import torch` uses ~100MB of memory per-process
-        # `import panel` uses ~61MB of memory per-process
-        # The pizero2w only has 512 MB of system memory..
-        force_single_process = True,
-        graph_address = config.graph_address,
-    )
