@@ -57,7 +57,7 @@ class BCPISystem(ez.Collection, TabbedApp):
 
     @property
     def title(self) -> str:
-        return 'BCPI'
+        return 'BCPI - BCI Development Environment for Raspberry Pi'
     
     @property
     def tabs(self) -> typing.List[Tab]:
@@ -95,7 +95,10 @@ class BCPISystem(ez.Collection, TabbedApp):
         self.MAPPER.apply_settings(
             FrequencyMapperSettings(
                 mapping = {
-                    #'GO': 15.0 # Hz
+                    'INJECT_12': 12.0, # Hz
+                    'INJECT_15': 15.0, # Hz
+                    'INJECT_17': 17.0, # Hz
+                    'INJECT_20': 20.0, # Hz
                 }
             )
         )
@@ -162,6 +165,8 @@ class BCPISystem(ez.Collection, TabbedApp):
             (self.MAPPER.OUTPUT_FREQUENCY, self.INJECTOR.INPUT_FREQUENCY),
             (EPHYS_PREPROC_TOPIC, self.INFERENCE.INPUT_SIGNAL),
             (self.INFERENCE_TAB.OUTPUT_SETTINGS, self.INFERENCE.INPUT_SETTINGS),
+            (self.INFERENCE.OUTPUT_DECODE, self.INFERENCE_TAB.INPUT_DECODE),
+            (self.INFERENCE.OUTPUT_CLASS, self.INFERENCE_TAB.INPUT_CLASS),
             (self.INFERENCE.OUTPUT_DECODE, DECODE_TOPIC),
             (self.INFERENCE.OUTPUT_CLASS, CLASS_TOPIC),
 
