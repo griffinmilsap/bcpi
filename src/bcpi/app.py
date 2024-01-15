@@ -17,6 +17,9 @@ from ezmsg.sigproc.signalinjector import SignalInjector, SignalInjectorSettings
 
 from ezmsg.fbcsp.inference import Inference, InferenceSettings
 from ezmsg.fbcsp.dashboard.inferencetab import InferenceTab, InferenceTabSettings
+from ezmsg.fbcsp.dashboard.datasettab import DatasetTab, DatasetTabSettings
+from ezmsg.fbcsp.dashboard.trainingtab import TrainingTab, TrainingTabSettings
+from ezmsg.fbcsp.fbcsptrainprocess import FBCSPTrainProcess
 
 from .temporalpreproc import TemporalPreproc, TemporalPreprocSettings
 from .config import BCPIConfig
@@ -46,8 +49,11 @@ class BCPISystem(ez.Collection, TabbedApp):
     CAT_TAB = CuedActionTask()
     PREPROC = TemporalPreproc()
 
+    DATASET_TAB = DatasetTab()
+    TRAINING_TAB = TrainingTab()
     INFERENCE_TAB = InferenceTab()
     INFERENCE = Inference()
+    TRAINING = FBCSPTrainProcess()
 
     @property
     def title(self) -> str:
@@ -56,9 +62,11 @@ class BCPISystem(ez.Collection, TabbedApp):
     @property
     def tabs(self) -> typing.List[Tab]:
         return [
-            self.INFERENCE_TAB,
             self.UNICORN_TAB,
             self.CAT_TAB,
+            self.DATASET_TAB,
+            self.TRAINING_TAB,
+            self.INFERENCE_TAB,
             self.SYSTEM_TAB,
         ]
 
@@ -127,6 +135,18 @@ class BCPISystem(ez.Collection, TabbedApp):
             )
         )
 
+        self.DATASET_TAB.apply_settings(
+            DatasetTabSettings(
+                data_dir = config.data_dir
+            )
+        )
+
+        self.TRAINING_TAB.apply_settings(
+            TrainingTabSettings(
+                data_dir = config.data_dir
+            )
+        )
+
     def network(self) -> ez.NetworkDefinition:
         return (
             (self.UNICORN_TAB.OUTPUT_ACCELEROMETER, ACCELEROMETER_TOPIC),
@@ -144,6 +164,10 @@ class BCPISystem(ez.Collection, TabbedApp):
             (self.INFERENCE_TAB.OUTPUT_SETTINGS, self.INFERENCE.INPUT_SETTINGS),
             (self.INFERENCE.OUTPUT_DECODE, DECODE_TOPIC),
             (self.INFERENCE.OUTPUT_CLASS, CLASS_TOPIC),
+
+            (self.DATASET_TAB.OUTPUT_DATASET, self.TRAINING_TAB.INPUT_DATASET),
+            (self.TRAINING_TAB.OUTPUT_TRAIN, self.TRAINING.INPUT_TRAIN),
+            (self.TRAINING.OUTPUT_EPOCH, self.TRAINING_TAB.INPUT_EPOCH),
         )
 
 
