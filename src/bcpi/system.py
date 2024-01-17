@@ -43,7 +43,7 @@ class SystemTab(ez.Unit, Tab):
     STATE: SystemTabState
 
     @property
-    def tab_name(self) -> str:
+    def title(self) -> str:
         return 'System'
 
     async def initialize(self) -> None:
