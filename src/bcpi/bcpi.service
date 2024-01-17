@@ -7,7 +7,7 @@ Requires=ezmsg.service
 [Service]
 Type=simple
 User=bcpi
-ExecStart=/home/bcpi/bcpi --port=8888 --only-core --single-process
+ExecStart=/home/bcpi/bcpi --only-core --single-process
 StandardOutput=journal
 
 [Install]
