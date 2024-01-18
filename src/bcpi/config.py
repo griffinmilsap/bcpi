@@ -5,7 +5,7 @@ from configparser import ConfigParser
 
 from pathlib import Path
 
-from ezmsg.unicorn.device import UnicornDeviceSettings
+from ezmsg.unicorn.device import UnicornSettings
 
 CONFIG_ENV = 'BCPI_CONFIG'
 CONFIG_PATH = '/etc/bcpi.conf'
@@ -32,10 +32,10 @@ class BCPIConfig:
         self.parser.read(config_files)
 
     @property
-    def unicorn_settings(self) -> UnicornDeviceSettings:
+    def unicorn_settings(self) -> UnicornSettings:
         address = self.parser.get('unicorn', 'address', fallback = 'simulator')
         n_samp = int(self.parser.get('unicorn', 'n_samp', fallback = 50))
-        return UnicornDeviceSettings(
+        return UnicornSettings(
             address = address,
             n_samp = n_samp
         )
