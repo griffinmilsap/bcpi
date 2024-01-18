@@ -42,6 +42,8 @@ class BCPICore(ez.Collection):
             )
         )
 
+        ez.logger.info(f'{config.unicorn_settings=}')
+
         self.UNICORN.apply_settings(
             UnicornDashboardSettings(
                 device_settings = config.unicorn_settings
