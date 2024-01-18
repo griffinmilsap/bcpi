@@ -9,6 +9,7 @@ from ezmsg.gadget.config import GadgetConfig
 from ezmsg.gadget.hiddevice import hid_devices
 
 from .config import CONFIG_PATH, CONFIG_ENV, create_config
+from .install import install, uninstall
 
 
 class BCPIArgs:
@@ -16,6 +17,8 @@ class BCPIArgs:
     only_core: bool
     single_process: bool
     create_config: bool
+    install: bool
+    uninstall: bool
 
 
 def cmdline() -> None:
@@ -49,13 +52,28 @@ def cmdline() -> None:
         help = 'create a config file at --config and exit'
     )
 
+    parser.add_argument(
+        '--install',
+        action = 'store_true',
+        help = 'install systemd services to start an ezmsg graphserver and bcpi at system boot'
+    )
+
+    parser.add_argument(
+        '--uninstall',
+        action = 'store_true',
+        help = 'uninstall bcpi-related systemd services'
+    )
+
     args = parser.parse_args(namespace=BCPIArgs)
 
     if args.create_config:
         create_config(config_path = args.config)
-        return
-
-    launch(config_path = args.config, only_core = args.only_core, single_process = args.single_process)
+    elif args.install:
+        ...
+    elif args.uninstall:
+        ...
+    else:
+        launch(config_path = args.config, only_core = args.only_core, single_process = args.single_process)
 
 
 def launch(config_path: typing.Optional[Path] = None, only_core: bool = False, single_process: bool = False) -> None:
