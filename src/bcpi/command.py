@@ -1,6 +1,5 @@
 import argparse
 import typing
-import traceback
 
 from pathlib import Path
 
@@ -9,9 +8,7 @@ import ezmsg.core as ez
 from ezmsg.gadget.config import GadgetConfig
 from ezmsg.gadget.hiddevice import hid_devices
 
-from .core import BCPICore, BCPICoreSettings
-from .app import BCPI, BCPISettings
-from .config import BCPIConfig, CONFIG_PATH, CONFIG_ENV, create_config
+from .config import CONFIG_PATH, CONFIG_ENV, create_config
 
 
 class BCPIArgs:
@@ -62,6 +59,10 @@ def cmdline() -> None:
 
 
 def launch(config_path: typing.Optional[Path] = None, only_core: bool = False, single_process: bool = False) -> None:
+    
+    from .config import BCPIConfig
+    from .core import BCPICore, BCPICoreSettings
+    from .app import BCPI, BCPISettings
 
     config = BCPIConfig(config_path = config_path)
 
