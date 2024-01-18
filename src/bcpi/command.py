@@ -1,5 +1,6 @@
 import argparse
 import typing
+import traceback
 
 from pathlib import Path
 
@@ -10,13 +11,14 @@ from ezmsg.gadget.hiddevice import hid_devices
 
 from .core import BCPICore, BCPICoreSettings
 from .app import BCPI, BCPISettings
-from .config import BCPIConfig, CONFIG_PATH, CONFIG_ENV
+from .config import BCPIConfig, CONFIG_PATH, CONFIG_ENV, create_config
 
 
 class BCPIArgs:
-    config: typing.Optional[Path] = None
-    only_core: bool = False
-    single_process: bool = False
+    config: typing.Optional[Path]
+    only_core: bool
+    single_process: bool
+    create_config: bool
 
 
 def cmdline() -> None:
@@ -27,7 +29,7 @@ def cmdline() -> None:
 
     parser.add_argument( 
         '--config',
-        type = lambda x: Path( x ),
+        type = lambda x: Path(x),
         help = f'config path for bcpi (default = {CONFIG_PATH}, or set {CONFIG_ENV})',
         default = None
     )
@@ -44,12 +46,22 @@ def cmdline() -> None:
         help = 'ensure all units run in single process (lower memory footprint)'
     )
 
+    parser.add_argument(
+        '--create-config',
+        action = 'store_true',
+        help = 'create a config file at --config and exit'
+    )
+
     args = parser.parse_args(namespace=BCPIArgs)
+
+    if args.create_config:
+        create_config(config_path = args.config)
+        return
 
     launch(config_path = args.config, only_core = args.only_core, single_process = args.single_process)
 
 
-def launch(config_path: typing.Optional[Path], only_core: bool = False, single_process: bool = False) -> None:
+def launch(config_path: typing.Optional[Path] = None, only_core: bool = False, single_process: bool = False) -> None:
 
     config = BCPIConfig(config_path = config_path)
 
@@ -96,3 +108,6 @@ def launch(config_path: typing.Optional[Path], only_core: bool = False, single_p
         force_single_process = single_process,
         graph_address = config.graph_address,
     )
+
+if __name__ == '__main__':
+    cmdline()

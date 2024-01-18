@@ -7,3 +7,7 @@ class BCPITopics:
     CLASS = 'CLASS' # typing.Optional[str] -- Decoded class
     TARGET = 'TARGET' # typing.Optional[str] -- Target class (from Task)
     TRIAL = 'TRIAL' # SampleMessage -- Clipped trial data (Preprocessed)
+
+    @classmethod
+    def device(cls, name: str) -> str:
+        return f'{name}/INPUT_HID'
