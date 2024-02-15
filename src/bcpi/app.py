@@ -5,6 +5,7 @@ import ezmsg.core as ez
 from ezmsg.panel.tabbedapp import TabbedApp, Tab
 from ezmsg.tasks.task import TaskSettings
 from ezmsg.tasks.cuedactiontask import CuedActionTask
+from ezmsg.tasks.ssvep.task import SSVEPTask
 
 from ezmsg.fbcsp.dashboard.inferencetab import InferenceTab, InferenceTabSettings
 from ezmsg.fbcsp.dashboard.datasettab import DatasetTab, DatasetTabSettings
@@ -23,6 +24,7 @@ class BCPI(ez.Collection, TabbedApp):
 
     CORE = BCPICore()
     CAT_TAB = CuedActionTask()
+    SSVEP_TAB = SSVEPTask()
 
     DATASET_TAB = DatasetTab()
     TRAINING_TAB = TrainingTab()
@@ -38,6 +40,7 @@ class BCPI(ez.Collection, TabbedApp):
         return [
             self.CORE.UNICORN,
             self.CAT_TAB,
+            self.SSVEP_TAB,
             self.DATASET_TAB,
             self.TRAINING_TAB,
             self.INFERENCE_TAB,
@@ -53,12 +56,13 @@ class BCPI(ez.Collection, TabbedApp):
             )
         )
 
-        self.CAT_TAB.apply_settings(
-            TaskSettings(
-                data_dir = config.data_dir,
-                buffer_dur = 10.0
-            )
+        task_settings = TaskSettings(
+            data_dir = config.data_dir,
+            buffer_dur = 10.0
         )
+
+        self.CAT_TAB.apply_settings(task_settings)
+        self.SSVEP_TAB.apply_settings(task_settings)
 
         self.INFERENCE_TAB.apply_settings(
             InferenceTabSettings(
@@ -81,8 +85,11 @@ class BCPI(ez.Collection, TabbedApp):
     def network(self) -> ez.NetworkDefinition:
         return (
             (BCPITopics.EPHYS_PREPROC, self.CAT_TAB.INPUT_SIGNAL),
-            (self.CAT_TAB.OUTPUT_SAMPLE, BCPITopics.TRIAL),
-            (self.CAT_TAB.OUTPUT_TARGET_CLASS, BCPITopics.TARGET),
+            (self.CAT_TAB.OUTPUT_SAMPLE, BCPITopics.CAT_TRIAL),
+            (self.CAT_TAB.OUTPUT_TARGET_CLASS, BCPITopics.CAT_TARGET),
+
+            (BCPITopics.EPHYS_PREPROC, self.SSVEP_TAB.INPUT_SIGNAL),
+            (self.SSVEP_TAB.OUTPUT_SAMPLE, BCPITopics.SSVEP_TRIAL),
 
             (self.INFERENCE_TAB.OUTPUT_SETTINGS, self.CORE.INPUT_INFERENCE_SETTINGS),
             (BCPITopics.DECODE, self.INFERENCE_TAB.INPUT_DECODE),

@@ -5,8 +5,10 @@ class BCPITopics:
     GYROSCOPE = 'GYRO' # AxisArray -- Gyroscope timeseries from device
     DECODE = 'DECODE' # ClassDecodeMessage -- Posterior Decoder Probabilities
     CLASS = 'CLASS' # typing.Optional[str] -- Decoded class
-    TARGET = 'TARGET' # typing.Optional[str] -- Target class (from Task)
-    TRIAL = 'TRIAL' # SampleMessage -- Clipped trial data (Preprocessed)
+    CAT_TARGET = 'CAT_TARGET' # typing.Optional[str] -- Target class (from CAT)
+    CAT_TRIAL = 'CAT_TRIAL' # SampleMessage -- Clipped trial data (Preprocessed) for CAT
+    SSVEP_TRIAL = 'SSVEP_TRIAL' # SampleMessage -- Clipped trial data (Preprocessed) for SSVEP
+
 
     @classmethod
     def device(cls, name: str) -> str:
