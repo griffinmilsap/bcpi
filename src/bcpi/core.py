@@ -99,7 +99,7 @@ class BCPICore(ez.Collection):
             (self.INJECTOR.OUTPUT_SIGNAL, self.PREPROC.INPUT_SIGNAL),
             (self.PREPROC.OUTPUT_SIGNAL, BCPITopics.EPHYS_PREPROC),
 
-            (BCPITopics.TARGET, self.MAPPER.INPUT_CLASS),
+            (BCPITopics.CAT_TARGET, self.MAPPER.INPUT_CLASS),
             (self.MAPPER.OUTPUT_FREQUENCY, self.INJECTOR.INPUT_FREQUENCY),
             (self.PREPROC.OUTPUT_SIGNAL, self.INFERENCE.INPUT_SIGNAL),
             
