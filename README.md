@@ -152,7 +152,7 @@ One of the most valuable bits of functionality that `bcpi` provides is USB HID d
         1. `git clone https://github.com/iscoe/ezmsg-fbcsp` 
 1. (Optional) Create a script that makes it easy to update all of these repos.  In `~/repos`, create a file called `pull_all.sh` and make it executable `chmod +x pull_all.sh`
     ``` bash
-    #! /usr/bin/env/bash
+    #! /usr/bin/env bash
     ls -R -d */.git | cut -d'.' -f1 | xargs -I{} git -C {} pull
     ```
 
