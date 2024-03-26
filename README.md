@@ -85,7 +85,9 @@ __Note that the hash (#) has been removed from the address line to indicate this
 
 ## Embedded (Raspberry Pi) Install (WIP)
 
-`bcpi` is purpose-built for Raspberry Pi embedded compute environments.  Much of this setup might be workable for other Linux single board computers, but YMMV.  This has only been confirmed working on the Pi Zero 2W so far.
+`bcpi` is purpose-built for Raspberry Pi embedded compute environments.  
+Much of this setup might be workable for other Linux single board computers, but YMMV.  
+Development experience is best on the Pi 4+ but Pi Zero 2 W has been successfully tested as well.
 
 1. Grab latest Raspberry Pi 64 bit OS version without Desktop
     1. Download Raspberry Pi Imager
@@ -106,8 +108,7 @@ __Note that the hash (#) has been removed from the address line to indicate this
 ### If Pi doesn't (or can't connect to the wifi network/no SSH yet)
 1. Use HDMI and USB adapters for video and mouse/keyboard input to Raspberry Pi
 1. Use `raspi-config` to (re)set WiFi settings and reboot.
-1. (Optional; only relevant to APLers) -- To connect to JHUAPL-Staff, follow instructions here (requires intranet access):
-    * https://cooler.jhuapl.edu/discussion/view/568079/jhuapl-staff-wifi-wpa-supplicantconf-for-raspberry-pi
+1. (Optional; only relevant to APLers) -- * [To connect to JHUAPL-Staff, follow instructions here (requires intranet access)](https://aplwiki.jhuapl.edu/confluence/display/LAPLKEY/Connect+Raspberry+Pi+to+JHUAPL-Staff+using+CLI)
 1. Reboot and disconnect HDMI and USB adapters; use SSH to access the RPi from a PC on the same WiFi network from here on out.
     ``` bash
     ssh bcpi@bcpi.local
@@ -117,17 +118,12 @@ __Note that the hash (#) has been removed from the address line to indicate this
 1. `sudo apt update`
 1. `sudo apt upgrade` (might take a bit)
 1. `sudo apt install ufw`
-1. `sudo apt install python3-pip`
 1. `sudo apt install python3-venv`
-1. (Optional) `sudo apt install python3-torch` (dependency for `ezmsg-fbcsp`)
-    * _Why do we install PyTorch this way?_   
-    Wheels (compiled binaries) for PyTorch don't currently exist for some Raspberry Pi platforms (Zero/2W in particular) but they are in the OS package manager, so this makes this install easier and allows us to forgo alternative package managers like conda/mamba
 
 ### Install [`ezmsg-gadget`](https://github.com/griffinmilsap/ezmsg-gadget)
 One of the most valuable bits of functionality that `bcpi` provides is USB HID device emulation for BCI interactions with un-modified systems.  This functionality is provided by [`ezmsg-gadget`](https://github.com/griffinmilsap/ezmsg-gadget) using "USB Gadget" mode which is only supported on some Raspberry Pi platforms.  The only supported platforms are the Raspberry Pi 4+, the CM4, and the Pi Zero//2W.  This is accomplished with a device-tree overlay applied on boot and a kernel-mode driver that enables this gadget mode functionality.  This is likely to be done VERY differently if you're deploying to a different embedded system environment (i.e. not RPi).
 
-`ezmsg-gadget` is installed separately from the rest of the system because it MUST be installed __AS ROOT__ to your system's Python.
-1. See: https://github.com/griffinmilsap/ezmsg-gadget?tab=readme-ov-file#install
+See: https://github.com/griffinmilsap/ezmsg-gadget?tab=readme-ov-file#install
     1. __Don't install the endpoint service (omit `--install-endpoint-service`); that conflicts with `bcpi`.__
 
 ### Clone a bunch of repositories
@@ -197,7 +193,7 @@ One of the most valuable bits of functionality that `bcpi` provides is USB HID d
     [Service]
     Type=oneshot
     User=bcpi
-    ExecStart=ezmsg start
+    ExecStart=/home/bcpi/env/bin/python -m ezmsg.core start
     RemainAfterExit=true
     ExecStop=ezmsg shutdown
     StandardOutput=journal
@@ -205,7 +201,7 @@ One of the most valuable bits of functionality that `bcpi` provides is USB HID d
     [Install]
     WantedBy=local-fs.target
     ```
-1. As superuser, create `/lib/systemd/system/bcpi.service` that will start `bcpi` in headless mode (no panel; `--only-core`) on boot.
+1. As superuser, create `/lib/systemd/system/bcpi.service` that will start `bcpi`
     ```
     [Unit]
     Description=BCI development environment for Raspberry Pi
@@ -216,12 +212,15 @@ One of the most valuable bits of functionality that `bcpi` provides is USB HID d
     [Service]
     Type=simple
     User=bcpi
-    ExecStart=/home/bcpi/bcpi --only-core --single-process
+    WorkingDirectory=/home/bcpi
+    ExecStart=/home/bcpi/env/bin/bcpi 
     StandardOutput=journal
 
     [Install]
     WantedBy=local-fs.target
     ```
+    __PRO TIP:__ The Pi Zero 2W is underpowered to deliver a compelling UI//frontend experience.
+   Change the `ExecStart` line to `ExecStart=/home/bcpi/env/bin/bcpi --only-core --single-process` for the Pi Zero 2W.
 1. `sudo systemctl daemon-reload`
 1. `sudo systemctl enable ezmsg.service`
 1. `sudo systemctl enable bcpi.service`
