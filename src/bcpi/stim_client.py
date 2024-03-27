@@ -23,7 +23,7 @@ class StimClientSettings(ez.Settings):
     trig_char_uuid: str = DEFAULT_TRIG_CHAR_UUID
 
 class StimClientState(ez.State):
-    conn: BleakClient
+    conn: typing.Optional[BleakClient] = None
     queue: asyncio.Queue
 
 class StimClient(ez.Unit):
@@ -34,13 +34,14 @@ class StimClient(ez.Unit):
     INPUT_TRIGGER = ez.InputStream(SampleTriggerMessage)
 
     async def initialize(self) -> None:
+        self.STATE.queue = asyncio.Queue()
         device = await BleakScanner.find_device_by_name(self.SETTINGS.name, **{})
         if device is None:
             raise Exception("Device not found!")
         self.STATE.conn = BleakClient(device)
         await self.STATE.conn.connect()
         ez.logger.info("Connected to Stim Server")
-        self.STATE.queue = asyncio.Queue()
+        
 
         async def callback_handler(_, data):
             await self.STATE.queue.put(data)
@@ -48,13 +49,13 @@ class StimClient(ez.Unit):
         await self.STATE.conn.start_notify(self.SETTINGS.stim_char_uuid, callback_handler)
 
     async def shutdown(self) -> None:
-        await self.STATE.conn.stop_notify(self.SETTINGS.stim_char_uuid)
-        await self.STATE.conn.disconnect()
+        if self.STATE.conn:
+            await self.STATE.conn.stop_notify(self.SETTINGS.stim_char_uuid)
+            await self.STATE.conn.disconnect()
 
 
     @ez.publisher(OUTPUT_STIM)
     async def pub_stims(self) -> typing.AsyncGenerator:
-        
         while True:
             # Await stim notification from stim characteristic
             data = await self.STATE.queue.get()
