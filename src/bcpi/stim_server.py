@@ -65,16 +65,8 @@ class StimServer(ez.Unit):
             )
         )
 
-        ez.logger.info(self.STATE.server.get_characteristic(self.SETTINGS.stim_char_uuid))
         await self.STATE.server.start()
         ez.logger.info("Advertising")
-
-        # await asyncio.sleep(2)
-        # ez.logger.info("Updating")
-        # server.get_characteristic(my_char_uuid)
-        # server.update_value(my_service_uuid, my_char_uuid)
-        # await asyncio.sleep(5)
-        # await server.stop()
 
     def read_request(self, characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
         ez.logger.info(f"Reading {characteristic.value}")
@@ -91,7 +83,7 @@ class StimServer(ez.Unit):
 
     @ez.subscriber(INPUT_STIM)
     async def on_stim(self, msg: StimMessage) -> None:
-        ez.logger.info(f'{msg.serialize()=}')
+        self.STATE.server.get_characteristic(self.SETTINGS.stim_char_uuid)
         self.STATE.server.update_value(self.SETTINGS.service_uuid, self.SETTINGS.stim_char_uuid)
 
 
