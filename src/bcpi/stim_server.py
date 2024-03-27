@@ -58,7 +58,7 @@ class StimServer(ez.Unit):
                 | GATTCharacteristicProperties.write
                 | GATTCharacteristicProperties.indicate
             ), 
-            value = bytearray(int.to_bytes(0xface, 4, byteorder = 'big')), 
+            value = bytearray(int.to_bytes(0xface, 2, byteorder = 'big')), 
             permissions = (
                 GATTAttributePermissions.readable 
                 | GATTAttributePermissions.writeable

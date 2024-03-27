@@ -58,6 +58,7 @@ class StimClient(ez.Unit):
         while True:
             # Await stim notification from stim characteristic
             data = await self.STATE.queue.get()
+            ez.logger.info(f'Notified! {data=}')
 
             msg = StimMessage(3)
             yield self.OUTPUT_STIM, msg
