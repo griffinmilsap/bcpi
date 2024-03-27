@@ -58,7 +58,7 @@ class StimServer(ez.Unit):
                 | GATTCharacteristicProperties.write
                 | GATTCharacteristicProperties.indicate
             ), 
-            value = bytearray(int.to_bytes(0xface, 2, byteorder = 'big')), 
+            value = bytearray(int.to_bytes(0xface, 2, 'big')), 
             permissions = (
                 GATTAttributePermissions.readable 
                 | GATTAttributePermissions.writeable
@@ -75,8 +75,6 @@ class StimServer(ez.Unit):
     def write_request(self, characteristic: BlessGATTCharacteristic, value: typing.Any, **kwargs):
         characteristic.value = value
         ez.logger.info(f"Char value set to {characteristic.value}")
-        if characteristic.value == b"\x0f":
-            ez.logger.info("NICE")
 
     async def shutdown(self) -> None:
         await self.STATE.server.stop()
