@@ -7,7 +7,8 @@ Requires=ezmsg.service
 [Service]
 Type=simple
 User=bcpi
-ExecStart=/home/bcpi/bcpi --only-core --single-process
+WorkingDirectory=/home/bcpi
+ExecStart=python -m bcpi.command
 StandardOutput=journal
 
 [Install]
