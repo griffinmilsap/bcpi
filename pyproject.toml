@@ -13,7 +13,7 @@ packages = [
 bcpi = "bcpi.command:cmdline"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.9,<3.13"
 panel = "^1.2.3"
 ezmsg = "^3.3.3"
 ezmsg-sigproc = "^1.2.3"
@@ -21,6 +21,8 @@ ezmsg-gadget = { git = "https://github.com/griffinmilsap/ezmsg-gadget.git", rev 
 ezmsg-tasks = { git = "https://github.com/griffinmilsap/ezmsg-tasks.git", rev = "main" }
 ezmsg-unicorn = { git = "https://github.com/griffinmilsap/ezmsg-unicorn.git", rev = "main" }
 ezmsg-fbcsp = { git = "https://github.com/iscoe/ezmsg-fbcsp.git", rev = "main", optional = true }
+bleak = "^0.21.1"
+bless = "^0.2.6"
 
 [tool.poetry.extras]
 fbcsp = [ "ezmsg-fbcsp" ]
