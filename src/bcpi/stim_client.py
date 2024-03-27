@@ -18,7 +18,7 @@ from .stim_server import (
 )
 
 class StimClientSettings(ez.Settings):
-    name: str
+    name: str = STIM_SERVICE_NAME
     stim_char_uuid: str = DEFAULT_STIM_CHAR_UUID
     trig_char_uuid: str = DEFAULT_TRIG_CHAR_UUID
 
@@ -40,6 +40,7 @@ class StimClient(ez.Unit):
         self.STATE.conn = BleakClient(device)
         await self.STATE.conn.connect()
         ez.logger.info("Connected to Stim Server")
+        self.STATE.queue = asyncio.Queue()
 
         async def callback_handler(_, data):
             await self.STATE.queue.put(data)
@@ -82,8 +83,6 @@ if __name__ == '__main__':
 
     stim_client = StimClient(
         StimClientSettings(
-            name = 'Stim Service',
-            #address = '2281EC7B-4204-31FE-3D36-7750AEE5C6F0'
         )
     )
 
