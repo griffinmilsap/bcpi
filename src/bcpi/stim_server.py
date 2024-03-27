@@ -14,12 +14,16 @@ from ezmsg.sigproc.sampler import SampleTriggerMessage
 
 from .messages import StimMessage
 
+STIM_SERVICE_NAME = 'BCPIStim'
+DEFAULT_SERVICE_UUID: str = "A07498CA-AD5B-474E-940D-16F1FBE7E8CD"
+DEFAULT_STIM_CHAR_UUID: str = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B"
+DEFAULT_TRIG_CHAR_UUID: str = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021C"
+
 
 class StimServerSettings(ez.Settings):
-    service_name = "Stim Service"
-    service_uuid: str = "A07498CA-AD5B-474E-940D-16F1FBE7E8CD"
-    stim_char_uuid: str = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B"
-    trig_char_uuid: str = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021C"
+    service_uuid: str = DEFAULT_SERVICE_UUID
+    stim_char_uuid: str = DEFAULT_STIM_CHAR_UUID
+    trig_char_uuid: str = DEFAULT_TRIG_CHAR_UUID
 
 class StimServerState(ez.State):
     server: BlessServer
@@ -35,7 +39,7 @@ class StimServer(ez.Unit):
 
         # Instantiate the server
         self.STATE.server = BlessServer(
-            name = self.SETTINGS.service_name,
+            name = STIM_SERVICE_NAME,
             loop = asyncio.get_running_loop()
         )
 

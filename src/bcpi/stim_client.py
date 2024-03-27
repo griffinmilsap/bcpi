@@ -11,12 +11,20 @@ import ezmsg.core as ez
 from ezmsg.sigproc.sampler import SampleTriggerMessage
 
 from .messages import StimMessage
+from .stim_server import (
+    DEFAULT_TRIG_CHAR_UUID, 
+    DEFAULT_STIM_CHAR_UUID,
+    STIM_SERVICE_NAME
+)
 
 class StimClientSettings(ez.Settings):
-    ...
+    name: str
+    stim_char_uuid: str = DEFAULT_STIM_CHAR_UUID
+    trig_char_uuid: str = DEFAULT_TRIG_CHAR_UUID
 
 class StimClientState(ez.State):
-    ...
+    conn: BleakClient
+    queue: asyncio.Queue
 
 class StimClient(ez.Unit):
     SETTINGS: StimClientSettings
@@ -25,13 +33,39 @@ class StimClient(ez.Unit):
     OUTPUT_STIM = ez.OutputStream(StimMessage)
     INPUT_TRIGGER = ez.InputStream(SampleTriggerMessage)
 
+    async def initialize(self) -> None:
+        device = await BleakScanner.find_device_by_name(self.SETTINGS.name, **{})
+        if device is None:
+            raise Exception("Device not found!")
+        self.STATE.conn = BleakClient(device)
+        await self.STATE.conn.connect()
+        ez.logger.info("Connected to Stim Server")
+
+        async def callback_handler(_, data):
+            await self.STATE.queue.put(data)
+
+        await self.STATE.conn.start_notify(self.SETTINGS.stim_char_uuid, callback_handler)
+
+    async def shutdown(self) -> None:
+        await self.STATE.conn.stop_notify(self.SETTINGS.stim_char_uuid)
+        await self.STATE.conn.disconnect()
+
+
     @ez.publisher(OUTPUT_STIM)
     async def pub_stims(self) -> typing.AsyncGenerator:
-        ...
+        
+        while True:
+            # Await stim notification from stim characteristic
+            data = await self.STATE.queue.get()
+
+            msg = StimMessage(3)
+            yield self.OUTPUT_STIM, msg
+
 
     @ez.subscriber(INPUT_TRIGGER)
     async def on_trig(self, msg: SampleTriggerMessage) -> None:
-        ...
+        # Send trigger to trigger characteristic
+        ez.logger.info(f'{msg=}')
 
 if __name__ == '__main__':
 
@@ -48,7 +82,8 @@ if __name__ == '__main__':
 
     stim_client = StimClient(
         StimClientSettings(
-
+            name = 'Stim Service',
+            #address = '2281EC7B-4204-31FE-3D36-7750AEE5C6F0'
         )
     )
 
